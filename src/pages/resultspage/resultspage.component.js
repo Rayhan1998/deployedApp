@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import RecipeBox from "../../components/recipeBox/recipeBox.component";
 import "./resultspage.styles.css";
 import Navbar from "../../components/navbar/navbar.component";
 import axios from "axios";
 
-import { useParams, useLocation } from "react-router-dom";
-import { Spinner } from "@chakra-ui/react";
+import { useParams } from "react-router-dom";
+import { Spinner, Button, Box } from "@chakra-ui/react";
 
 export default function ResultsPage() {
-  const location = useLocation();
   let [results, setResults] = useState([]);
-
+  let [getResponse, setgetResponse] = useState([]);
   let [isLoaded, setIsloaded] = useState(false);
+  const [loadMore, setLoadMore] = useState(1);
 
   let { foodType, foodCatigory, query } = useParams();
 
@@ -25,7 +25,7 @@ export default function ResultsPage() {
         )
         .then(res => {
           setResults(res.data.hits);
-
+          setgetResponse(res);
           console.log(res);
         })
         .catch(err => console.log(err));
@@ -38,7 +38,7 @@ export default function ResultsPage() {
             )
             .then(res => {
               setResults(res.data.hits);
-
+              setgetResponse(res);
               console.log(res);
             })
             .catch(err => console.log(err));
@@ -49,6 +49,7 @@ export default function ResultsPage() {
             )
             .then(res => {
               setResults(res.data.hits);
+              setgetResponse(res);
             })
             .catch(err => console.log(err));
         }
@@ -60,6 +61,7 @@ export default function ResultsPage() {
             )
             .then(res => {
               setResults(res.data.hits);
+              setgetResponse(res);
             })
             .catch(err => console.log(err));
         }
@@ -67,17 +69,25 @@ export default function ResultsPage() {
     }
   }, [foodType]);
 
+  const loadMoreResults = request => {
+    axios
+      .get(`${request}`)
+      .then(res => {
+        console.log(res.data.hits);
+        setResults(results => [...results, ...res.data.hits]);
+        setgetResponse(res);
+      })
+      .catch(err => console.log(err));
+  };
+  console.log(getResponse);
+
   useEffect(() => {
     if (results.length > 0) {
       setIsloaded(true);
     }
   }, [results]);
+  console.log(results.length);
 
-  // console.log(location.pathname.split("/")[2].split("=")[1]);
-  // console.log(location.pathname.split("/")[3].split("=")[1]);
-
-  console.log(foodCatigory);
-  console.log(foodType);
   return (
     <div className="results-page">
       <Navbar />
@@ -103,6 +113,16 @@ export default function ResultsPage() {
           <Spinner size="xl" w="250px" h="250px" />
         )}
       </section>
+
+      <Box display="flex" justifyContent="center">
+        <Button
+          colorScheme="orange"
+          onClick={() => loadMoreResults(getResponse.data._links.next.href)}
+          w="150px"
+        >
+          Load More
+        </Button>
+      </Box>
     </div>
   );
 }
